@@ -1,5 +1,5 @@
-# ASCII Video Generator
-
+# ASCIIgen
+ASCII Video Generator
 A Python tool that converts regular videos into ASCII art videos with customizable styling options.
 
 ## Requirements
@@ -48,4 +48,4 @@ Use pre-defined character sets (`"short"`, `"long"`, `"dot"`, `"hash"`) or pass 
 
 ---
 
-*Converts any video into retro ASCII art while preserving motion and optionally color information.*
+*Convert videos to ASCII art*
