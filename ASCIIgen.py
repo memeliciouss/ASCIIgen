@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 def ascii_video(input_path, output_path, ascii_resolution=64, char_width=10, char_height=20,
                          invert_ascii=False, colored = False, ascii_char_set="short"):
@@ -17,7 +18,7 @@ def ascii_video(input_path, output_path, ascii_resolution=64, char_width=10, cha
     # ASCII characters ordered from darkest to lightest
     ASCII_CHAR_SETS = {
         "short": "@%#*+=-:. ",
-        "long": "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
+        "long": "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
         "dot": ". ",
         "hash": "# ",
         # Can directly pass a custom string of ordered chars too
@@ -56,6 +57,9 @@ def ascii_video(input_path, output_path, ascii_resolution=64, char_width=10, cha
     if not cap.isOpened():
         print(f"Error: Could not open video file {input_path}")
         return
+    
+    font_path = "CourierPrime.ttf"
+    font = ImageFont.truetype(font_path, char_height-2)
 
     # Get video properties
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -106,6 +110,11 @@ def ascii_video(input_path, output_path, ascii_resolution=64, char_width=10, cha
                                             (ascii_resolution, ascii_resolution),
                                             interpolation=cv2.INTER_AREA)
 
+            
+            # convert OpenCV to PIL format
+            pil_image = Image.fromarray(cv2.cvtColor(ascii_video_frame, cv2.COLOR_BGR2RGB))
+            draw = ImageDraw.Draw(pil_image)
+
             # 3. Convert to ASCII art according to brightness level
             for r in range(ascii_resolution):
                 for c in range(ascii_resolution):
@@ -135,19 +144,19 @@ def ascii_video(input_path, output_path, ascii_resolution=64, char_width=10, cha
                     x = c * char_width
                     y = (r + 1) * char_height
 
-                    cv2.putText(ascii_video_frame,
-                                ascii_char,
-                                (x, y),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                char_height / 20.0,
-                                char_color, # Use the determined char drawing color
-                                1,
-                                cv2.LINE_AA)
+                    # Drawing using PILLOW to use monospace font
+                    draw.text((x, y - font.getbbox(ascii_char)[3]),
+                                  ascii_char,
+                                  font=font,
+                                  fill=char_color)
+            
+            # convert PIL to OpenCV format
+            ascii_video_frame = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
             # Write the generated ASCII art frame to the output video
             out.write(ascii_video_frame)
             frame_count += 1
-            print(f"Processing frame {frame_count}...", end='\r')
+            print(f"Processing frame {frame_count}...", end='\r', flush=True)
 
         print(f"\nFinished processing {frame_count} frames.")
         print(f"ASCII art video saved to: {output_path}")
@@ -166,4 +175,4 @@ if __name__ == "__main__":
     output = 'output.mp4'
     resolution = 80
 
-    ascii_video(input, output, resolution, invert_ascii=True, colored=True, ascii_char_set=";:. ")
+    ascii_video(input, output, resolution, invert_ascii=True, colored=True, ascii_char_set="@$&!:. ")
